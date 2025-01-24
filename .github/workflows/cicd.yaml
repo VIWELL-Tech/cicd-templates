@@ -52,8 +52,8 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # echo "${{ vars.ENV_DEV }}"
-          # echo "${{ vars.ENV_DEV }}" > .env
+          echo "${{ vars.ENV_DEV }}"
+          echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
           docker build . -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
           docker tag $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
