@@ -30,6 +30,7 @@ on:
         
 
 jobs:
+
   build:
     runs-on: 
       - self-hosted
@@ -53,9 +54,6 @@ jobs:
         id: vars
         run: echo "TAG=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: List directory contents (for debugging)
-        run: ls -la
-
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
@@ -64,7 +62,6 @@ jobs:
           ECR_REPOSITORY: ${{ inputs.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          DOCKER_BUILDKIT: 1  # Enable Docker BuildKit
         run: |
           echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
@@ -74,6 +71,7 @@ jobs:
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
           echo "tag=$TAG" >> $GITHUB_ENV
+
 
   deploy:
     needs: build
@@ -86,56 +84,3 @@ jobs:
       - name: Configure EKS
         run: |
           kubectl rollout restart deployment ${{ inputs.DEPLOY_NAME }} --namespace=viwell-preprod
-  # build:
-  #   runs-on: 
-  #     - self-hosted
-  #     - ${{ inputs.RUNS_ON }}
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         aws-access-key-id: ${{ secrets.VIWELL_AWS_DEV_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.VIWELL_AWS_DEV_SECRET_ACCESS_KEY }}
-  #         aws-region: me-central-1
-
-  #     - name: Login to Amazon ECR
-  #       id: login-ecr
-  #       uses: aws-actions/amazon-ecr-login@v2
-
-  #     - name: Create Docker image tag
-  #       id: vars
-  #       run: echo "TAG=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-
-  #     - name: Build, tag, and push image to Amazon ECR
-  #       id: build-image
-  #       env:
-  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  #         ENV: ${{ inputs.ENVIRONMENT }}
-  #         ECR_REPOSITORY: ${{ inputs.ECR_REPOSITORY }}
-  #         IMAGE_TAG: ${{ github.sha }}
-  #         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  #       run: |
-  #         echo "${{ vars.ENV_DEV }}"
-  #         echo "${{ vars.ENV_DEV }}" > .env
-  #         TAG=${{ steps.vars.outputs.TAG }}
-  #         docker build . -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
-  #         docker tag $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
-  #         docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
-  #         docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
-  #         echo "tag=$TAG" >> $GITHUB_ENV
-
-
-  # deploy:
-  #   needs: build
-  #   runs-on: [self-hosted, preprod_eks_runner]
-  #   steps:
-  #     - name: Setup kubectl
-  #       uses: azure/setup-kubectl@v4
-  #       with:
-  #         version: 'latest'
-  #     - name: Configure EKS
-  #       run: |
-  #         kubectl rollout restart deployment ${{ inputs.DEPLOY_NAME }} --namespace=viwell-preprod
