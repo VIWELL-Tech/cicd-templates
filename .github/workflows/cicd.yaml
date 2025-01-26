@@ -67,6 +67,7 @@ jobs:
 
 
   deploy:
+    needs: build
     runs-on: [self-hosted, preprod_eks_runner]
     steps:
       - name: Setup kubectl
