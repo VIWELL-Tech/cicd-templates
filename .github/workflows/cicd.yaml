@@ -10,7 +10,7 @@ on:
         description: "AWS SECRET KEY"
         required: true
     inputs:
-      ENV:
+      ENVIRONMENT:
         description: "Which env this workflow will be building and deploying to"
         required: true
         type: string
@@ -19,6 +19,10 @@ on:
         required: false
         type: string
         default: "self-hosted"
+      DEPLOY_NAME:
+        description: "Additional tag to select a runner for the job execution"
+        required: false
+        type: string
 jobs:
   build:
     runs-on: 
@@ -47,7 +51,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ENV: staging
+          ENV: ${{ inputs.ENVIRONMENT }}
           ECR_REPOSITORY: v2-service-user
           IMAGE_TAG: ${{ github.sha }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -60,3 +64,15 @@ jobs:
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
           echo "tag=$TAG" >> $GITHUB_ENV
+
+
+  deploy:
+    runs-on: [self-hosted, preprod_eks_runner]
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+      - name: Configure EKS
+        run: |
+          kubectl rollout restart deployment ${{ inputs.DEPLOY_NAME }} --namespace=viwell-preprod
