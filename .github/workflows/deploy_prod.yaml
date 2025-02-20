@@ -28,7 +28,8 @@ jobs:
 
     - name: Test github runner privillege
       run: |
-        kubectl rollout restart deploy  ${{ inputs.RUNS_ON }} -n prod-viwell
+        kubectl rollout restart deploy  ${{ inputs.DEPLOY_NAME }} -n prod-viwell
         sleep "${{ inputs.PERIOD }}m"
+        kubectl get pods | grep -i ${{ inputs.DEPLOY_NAME }}
 
         
