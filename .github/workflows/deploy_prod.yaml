@@ -30,6 +30,6 @@ jobs:
       run: |
         kubectl rollout restart deploy  ${{ inputs.DEPLOY_NAME }} -n prod-viwell
         sleep "${{ inputs.PERIOD }}m"
-        kubectl get pods | grep -i ${{ inputs.DEPLOY_NAME }} -n prod-viwell
+        kubectl get pods -n prod-viwell | grep -i ${{ inputs.DEPLOY_NAME }}
 
         
