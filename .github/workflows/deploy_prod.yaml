@@ -26,7 +26,7 @@ jobs:
     - name: Setup kubectl
       uses: azure/setup-kubectl@v4
 
-    - name: Test github runner privillege
+    - name: Deploy to prod and check its availability
       run: |
         kubectl rollout restart deploy  ${{ inputs.DEPLOY_NAME }} -n prod-viwell
         sleep "${{ inputs.PERIOD }}m"
