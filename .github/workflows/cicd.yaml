@@ -79,7 +79,9 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: [self-hosted, preprod_eks_runner]
+    runs-on: 
+      - self-hosted
+      - ${{ inputs.RUNS_ON }}
     steps:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
