@@ -91,8 +91,10 @@ jobs:
         run: |
           if [ "${{ inputs.ENVIRONMENT }}" = "staging" ]; then
             kubectl rollout restart deployment ${{ inputs.DEPLOY_NAME }} --namespace=viwell-preprod
+            echo "Deployment restarted in Staging env"
           elif [ "${{ inputs.ENVIRONMENT }}" = "prod" ]; then
             kubectl rollout restart deployment ${{ inputs.DEPLOY_NAME }} --namespace=prod-viwell
+            echo "Deployment restarted in Prod env"
           else
             echo "::error::Unknown environment '${{ inputs.ENVIRONMENT }}'"
             exit 1
