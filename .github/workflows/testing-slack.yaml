@@ -4,7 +4,6 @@ on: push
 
 jobs:
 
-
   Testing:
     runs-on: 
       - "self-hosted"
