@@ -1,6 +1,10 @@
 name: test notification to slack
 on: 
   workflow_call:
+    secrets:
+      SLACK_WEBHOOK_URL:
+        description: "slack webhook"
+        required: true
     inputs:
       DEPLOY_NAME:
         description: "Additional tag to select a runner for the job execution"
