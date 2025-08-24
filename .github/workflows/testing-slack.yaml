@@ -1,5 +1,5 @@
 name: test notification to slack
-
+on: 
   workflow_call:
     inputs:
       DEPLOY_NAME:
