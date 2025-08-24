@@ -7,8 +7,8 @@ jobs:
 
   Testing:
     runs-on: 
-      - self-hosted
-      - preprod_eks_runner
+      - "self-hosted"
+      - "preprod_eks_runner"
     steps:
   
       - name: Post a message in a channel
