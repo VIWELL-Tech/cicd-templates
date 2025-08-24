@@ -1,6 +1,6 @@
 name: test notification to slack
 
-on: workflow_call
+on: push
 
 jobs:
 
