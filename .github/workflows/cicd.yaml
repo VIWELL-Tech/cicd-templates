@@ -11,7 +11,7 @@ on:
         required: true
       SLACK_WEBHOOK_URL:
         description: "slack webhook"
-        required: true
+        required: false
       NPM_TOKEN:
         description: "Additional tag to select a runner for the job execution"
         required: false
