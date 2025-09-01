@@ -52,6 +52,7 @@ jobs:
       - name: Create .yarnrc.yml
         run: |
           echo "${{ secrets.YARNRC_YML }}" > .yarnrc.yml
+          ls
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
