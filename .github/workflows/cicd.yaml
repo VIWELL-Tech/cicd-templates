@@ -15,7 +15,7 @@ on:
       NPM_TOKEN:
         description: "Additional tag to select a runner for the job execution"
         required: false
-      YARNRC_YML:
+      NPMRC_PKG:
         description: "Additional tag to select a runner for the job execution"
         required: false
     inputs:
@@ -49,10 +49,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Create .yarnrc.yml
+      - name: Create .npmrc.yml
         run: |
-          echo "${{ secrets.YARNRC_YML }}" > .yarnrc.yml
-          ls
+          echo "${{ secrets.NPMRC_PKG }}" > .npmrc
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
