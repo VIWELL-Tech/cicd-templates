@@ -15,9 +15,9 @@ on:
       NPM_TOKEN:
         description: "Additional tag to select a runner for the job execution"
         required: false
-      # NPMRC_PKG:
-      #   description: "Additional tag to select a runner for the job execution"
-      #   required: false
+      NPMRC_PKG:
+        description: "Additional tag to select a runner for the job execution"
+        required: false
     inputs:
       ENVIRONMENT:
         description: "Which env this workflow will be building and deploying to"
@@ -49,9 +49,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      # - name: Create .npmrc.yml
-      #   run: |
-      #     echo "${{ secrets.NPMRC_PKG }}" > .npmrc
+        
+      - name: Create .npmrc file
+        run: echo "${{ secrets.NPMRC_PKG }}" > ~/.npmrc
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
