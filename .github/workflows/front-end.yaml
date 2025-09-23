@@ -71,6 +71,9 @@ jobs:
       - name: Create Docker image tag
         id: vars
         run: echo "TAG=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Verify Buildx
+        run: docker buildx ls
+
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
