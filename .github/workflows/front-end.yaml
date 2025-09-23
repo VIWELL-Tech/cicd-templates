@@ -50,9 +50,9 @@ jobs:
         uses: actions/checkout@v4
 
         
-      # # ✅ Install and set up Buildx
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v3       
+      # ✅ Install and set up Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3       
         
       - name: Create .npmrc file
         run: echo "${{ secrets.NPMRC_PKG }}" > ~/.npmrc
@@ -86,7 +86,7 @@ jobs:
           echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
-          docker  build . -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG  
+          docker  buildx build . -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG --push
           docker tag $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
