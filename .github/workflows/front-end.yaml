@@ -87,7 +87,7 @@ jobs:
           echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
-          docker buildx build . --memory=4g --cpus=2  -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG  --push
+          docker buildx build . -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG  
           docker tag $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
           docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
