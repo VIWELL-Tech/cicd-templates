@@ -48,7 +48,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
         
+      # ✅ Install and set up Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3       
         
       - name: Create .npmrc file
         run: echo "${{ secrets.NPMRC_PKG }}" > ~/.npmrc
