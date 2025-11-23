@@ -48,10 +48,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      # - name: Create .npmrc.yml
-      #   run: |
-      #     echo "${{ secrets.NPMRC_PKG }}" > .npmrc
+              
+      - name: Create .npmrc
+        run: |
+          echo "@viwell-tech:registry=https://npm.pkg.github.com/" > .npmrc
+          echo "@VIWELL-Tech:registry=https://npm.pkg.github.com/" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPMRC_PKG }}" >> .npmrc
+
+
+      - name: Create .yarnrc.yml
+        run: |
+              cat <<EOF > .yarnrc.yml
+              npmRegistryServer: "https://registry.npmjs.org"
+              npmScopes:
+                viwell-tech:
+                  npmRegistryServer: "https://npm.pkg.github.com"
+                  npmAuthToken: "${{ secrets.NPMRC_PKG }}"
+                VIWELL-Tech:
+                  npmRegistryServer: "https://npm.pkg.github.com"
+                  npmAuthToken: "${{ secrets.NPMRC_PKG }}"
+              
+              npmRegistries:
+                "https://npm.pkg.github.com":
+                  npmAuthToken: "${{ secrets.NPMRC_PKG }}"
+              EOF
+
+
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
