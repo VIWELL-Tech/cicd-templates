@@ -11,13 +11,13 @@ on:
         required: true
       SLACK_WEBHOOK_URL:
         description: "slack webhook"
-        required: false
+        required: true
       NPM_TOKEN:
         description: "Additional tag to select a runner for the job execution"
-        required: false
+        required: true
       NPMRC_PKG:
         description: "Additional tag to select a runner for the job execution"
-        required: false
+        required: true
     inputs:
       ENVIRONMENT:
         description: "Which env this workflow will be building and deploying to"
@@ -25,16 +25,16 @@ on:
         type: string
       RUNS_ON:
         description: "Additional tag to select a runner for the job execution"
-        required: false
+        required: true
         type: string
         default: "self-hosted"
       DEPLOY_NAME:
         description: "Additional tag to select a runner for the job execution"
-        required: false
+        required: true
         type: string
       ECR_REPOSITORY:
         description: "Additional tag to select a runner for the job execution"
-        required: false
+        required: true
         type: string
 
         
