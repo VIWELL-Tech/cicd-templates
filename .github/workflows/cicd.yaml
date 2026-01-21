@@ -14,7 +14,7 @@ on:
         required: true
       NPM_TOKEN:
         description: "Additional tag to select a runner for the job execution"
-        required: true
+        required: false
       NPMRC_PKG:
         description: "Additional tag to select a runner for the job execution"
         required: true
