@@ -37,18 +37,18 @@ on:
         required: true
         type: string
 
-        
+
 
 jobs:
 
   build:
-    runs-on: 
+    runs-on:
       - self-hosted
       - ${{ inputs.RUNS_ON }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-              
+
       - name: Create .npmrc
         run: |
           echo "@viwell-tech:registry=https://npm.pkg.github.com/" > .npmrc
@@ -58,20 +58,20 @@ jobs:
 
       - name: Create .yarnrc.yml
         run: |
-              cat <<EOF > .yarnrc.yml
-              npmRegistryServer: "https://registry.npmjs.org"
-              npmScopes:
-                viwell-tech:
-                  npmRegistryServer: "https://npm.pkg.github.com"
-                  npmAuthToken: "${{ secrets.NPMRC_PKG }}"
-                VIWELL-Tech:
-                  npmRegistryServer: "https://npm.pkg.github.com"
-                  npmAuthToken: "${{ secrets.NPMRC_PKG }}"
-              
-              npmRegistries:
-                "https://npm.pkg.github.com":
-                  npmAuthToken: "${{ secrets.NPMRC_PKG }}"
-              EOF
+          cat <<EOF > .yarnrc.yml
+          npmRegistryServer: "https://registry.npmjs.org"
+          npmScopes:
+            viwell-tech:
+              npmRegistryServer: "https://npm.pkg.github.com"
+              npmAuthToken: "${{ secrets.NPMRC_PKG }}"
+            VIWELL-Tech:
+              npmRegistryServer: "https://npm.pkg.github.com"
+              npmAuthToken: "${{ secrets.NPMRC_PKG }}"
+          
+          npmRegistries:
+            "https://npm.pkg.github.com":
+              npmAuthToken: "${{ secrets.NPMRC_PKG }}"
+          EOF
 
 
 
@@ -80,7 +80,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.VIWELL_AWS_DEV_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.VIWELL_AWS_DEV_SECRET_ACCESS_KEY }}
-          aws-region: me-central-1
+          aws-region: eu-central-1
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -102,10 +102,10 @@ jobs:
           echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
-          docker build . -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
-          docker tag $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
-          docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
+          docker build . -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG
+          docker tag $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG
+          docker push $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:latest
           echo "tag=$TAG" >> $GITHUB_ENV
       - name: Post a message in a channel
         uses: slackapi/slack-github-action@v2.1.1
@@ -123,7 +123,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: 
+    runs-on:
       - self-hosted
       - ${{ inputs.RUNS_ON }}
     steps:
