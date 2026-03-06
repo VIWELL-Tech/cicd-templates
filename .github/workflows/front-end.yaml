@@ -62,7 +62,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.VIWELL_AWS_DEV_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.VIWELL_AWS_DEV_SECRET_ACCESS_KEY }}
-          aws-region: me-central-1
+          aws-region: eu-central-1
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -86,15 +86,15 @@ jobs:
           echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
-          # docker  buildx build . --push -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG 
+          # docker  buildx build . --push -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG
           # docker tag $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
           # docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
           # docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
           docker buildx build . \
           --platform linux/amd64 \
           --push \
-          -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG \
-          -t $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
+          -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG \
+          -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:latest
           echo "tag=$TAG" >> $GITHUB_ENV
       - name: Post a message in a channel
         uses: slackapi/slack-github-action@v2.1.1
