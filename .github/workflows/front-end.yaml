@@ -80,7 +80,7 @@ jobs:
           echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
-          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG .
           docker tag $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG
           docker push $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:latest
@@ -101,7 +101,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: 
+    runs-on:
       - self-hosted
       - ${{ inputs.RUNS_ON }}
     steps:
