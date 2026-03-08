@@ -15,9 +15,6 @@ on:
       NPM_TOKEN:
         description: "Additional tag to select a runner for the job execution"
         required: false
-      NPMRC_PKG:
-        description: "Additional tag to select a runner for the job execution"
-        required: false
     inputs:
       ENVIRONMENT:
         description: "Which env this workflow will be building and deploying to"
@@ -37,25 +34,15 @@ on:
         required: false
         type: string
 
-        
-
 jobs:
 
   build:
-    runs-on: 
+    runs-on:
       - self-hosted
       - ${{ inputs.RUNS_ON }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-        
-      # ✅ Install and set up Buildx
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3       
-        
-      - name: Create .npmrc file
-        run: echo "${{ secrets.NPMRC_PKG }}" > ~/.npmrc
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -72,8 +59,6 @@ jobs:
         id: vars
         run: echo "TAG=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-
-
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
@@ -86,32 +71,29 @@ jobs:
           echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
-          # docker  buildx build . --push -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG
-          # docker tag $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
-          # docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:$TAG
-          # docker push $ECR_REGISTRY/$ENV/$ECR_REPOSITORY:latest
-          docker buildx build . \
-          --platform linux/amd64 \
-          --push \
-          -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:$TAG \
-          -t $ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY:latest
+          FULL_IMAGE=$ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY
+          docker build --no-cache -t $FULL_IMAGE:$TAG .
+          docker tag $FULL_IMAGE:$TAG $FULL_IMAGE:latest
+          docker push $FULL_IMAGE:$TAG
+          docker push $FULL_IMAGE:latest
           echo "tag=$TAG" >> $GITHUB_ENV
+
       - name: Post a message in a channel
         uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*GitHub Action build result in ${{ inputs.ENVIRONMENT }} for ${{ inputs.DEPLOY_NAME }}*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+            text: "*GitHub Action build result in ${{ inputs.ENVIRONMENT }}*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "GitHub Action build result in ${{ inputs.ENVIRONMENT }} for ${{ inputs.DEPLOY_NAME }}*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  text: "GitHub Action build result in ${{ inputs.ENVIRONMENT }}: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
 
   deploy:
     needs: build
-    runs-on: 
+    runs-on:
       - self-hosted
       - ${{ inputs.RUNS_ON }}
     steps:
@@ -138,9 +120,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*GitHub Action deployment result in ${{ inputs.ENVIRONMENT }} for ${{ inputs.DEPLOY_NAME }} *: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+            text: "*GitHub Action deployment result in ${{ inputs.ENVIRONMENT }}*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "GitHub Action deployment result in ${{ inputs.ENVIRONMENT }} for ${{ inputs.DEPLOY_NAME }}: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"     
+                  text: "GitHub Action deployment result in ${{ inputs.ENVIRONMENT }}: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
