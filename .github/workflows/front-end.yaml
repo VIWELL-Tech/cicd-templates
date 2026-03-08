@@ -72,7 +72,14 @@ jobs:
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
           FULL_IMAGE=$ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY
-          DOCKER_BUILDKIT=0 docker build --platform linux/amd64 --no-cache --provenance=false -t $FULL_IMAGE:$TAG .
+          
+          # Build with buildx but export as docker format tarball
+          docker buildx build --platform linux/amd64 --no-cache --provenance=false --sbom=false --output type=docker,dest=/tmp/image.tar -t $FULL_IMAGE:$TAG .
+          
+          # Load the docker-format image back
+          docker load -i /tmp/image.tar
+          rm -f /tmp/image.tar
+          
           docker tag $FULL_IMAGE:$TAG $FULL_IMAGE:latest
           docker push $FULL_IMAGE:$TAG
           docker push $FULL_IMAGE:latest
