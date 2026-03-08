@@ -72,7 +72,7 @@ jobs:
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
           FULL_IMAGE=$ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY
-          docker build --platform linux/amd64 --no-cache -t $FULL_IMAGE:$TAG .
+          docker build --platform linux/amd64 --no-cache --provenance=false -t $FULL_IMAGE:$TAG .
           docker tag $FULL_IMAGE:$TAG $FULL_IMAGE:latest
           docker push $FULL_IMAGE:$TAG
           docker push $FULL_IMAGE:latest
