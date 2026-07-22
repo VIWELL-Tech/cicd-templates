@@ -37,6 +37,9 @@ on:
 jobs:
 
   build:
+    concurrency:
+      group: build-${{ inputs.ENVIRONMENT }}-${{ inputs.DEPLOY_NAME }}
+      cancel-in-progress: false
     runs-on:
       - self-hosted
       - ${{ inputs.RUNS_ON }}
@@ -68,7 +71,6 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "${{ vars.ENV_DEV }}"
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
           FULL_IMAGE=$ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY
@@ -93,6 +95,9 @@ jobs:
 
   deploy:
     needs: build
+    concurrency:
+      group: deploy-${{ inputs.ENVIRONMENT }}-${{ inputs.DEPLOY_NAME }}
+      cancel-in-progress: false
     runs-on:
       - self-hosted
       - ${{ inputs.RUNS_ON }}
