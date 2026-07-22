@@ -15,6 +15,12 @@ on:
       NPM_TOKEN:
         description: "Additional tag to select a runner for the job execution"
         required: false
+      NPMRC_PKG:
+        description: "GitHub Packages auth token for .npmrc"
+        required: false
+      HUGEICONS_TOKEN:
+        description: "Hugeicons npm registry auth token"
+        required: false
     inputs:
       ENVIRONMENT:
         description: "Which env this workflow will be building and deploying to"
@@ -70,11 +76,16 @@ jobs:
           ECR_REPOSITORY: ${{ inputs.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPMRC_PKG: ${{ secrets.NPMRC_PKG }}
+          HUGEICONS_TOKEN: ${{ secrets.HUGEICONS_TOKEN }}
         run: |
           echo "${{ vars.ENV_DEV }}" > .env
           TAG=${{ steps.vars.outputs.TAG }}
           FULL_IMAGE=$ECR_REGISTRY/$ENV/viwell-$ECR_REPOSITORY
-          docker build --no-cache -t $FULL_IMAGE:$TAG .
+          docker build --no-cache \
+            --build-arg NPMRC_PKG=$NPMRC_PKG \
+            --build-arg HUGEICONS_TOKEN=$HUGEICONS_TOKEN \
+            -t $FULL_IMAGE:$TAG .
           docker tag $FULL_IMAGE:$TAG $FULL_IMAGE:latest
           docker push $FULL_IMAGE:$TAG
           docker push $FULL_IMAGE:latest
