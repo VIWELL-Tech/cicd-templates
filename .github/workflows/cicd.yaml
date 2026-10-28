@@ -137,18 +137,30 @@ jobs:
         with:
           version: 'latest'
       - name: Configure EKS
+        env:
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOY_NAME: ${{ inputs.DEPLOY_NAME }}
         run: |
-          if [ "${{ inputs.ENVIRONMENT }}" = "staging" ]; then
-            kubectl rollout restart deployment ${{ inputs.DEPLOY_NAME }} --namespace=viwell-preprod
+          if [ "$ENVIRONMENT" = "staging" ]; then
+            kubectl rollout restart deployment "$DEPLOY_NAME" --namespace=viwell-preprod
             echo "Deployment restarted in Staging env"
-            kubectl -n viwell-preprod rollout status deployment ${{ inputs.DEPLOY_NAME }} --timeout=10m
-            echo "Migrating..."
-            kubectl -n viwell-preprod exec -it deploy/${{ inputs.DEPLOY_NAME }} -- yarn migrate-js:run:all
-          elif [ "${{ inputs.ENVIRONMENT }}" = "prod" ]; then
-            kubectl rollout restart deployment ${{ inputs.DEPLOY_NAME }} --namespace=prod-viwell
+            kubectl -n viwell-preprod rollout status deployment "$DEPLOY_NAME" --timeout=10m
+            # Not every service has migrations (service-cli, cms-module): skip
+            # those instead of failing on a missing yarn script. No -it: the
+            # runner has no TTY. Needs pods/exec in viwell-preprod for the
+            # runner SA (viwell-v2-infrastructure github_runner/runner-rbac.yaml).
+            if kubectl -n viwell-preprod exec "deploy/$DEPLOY_NAME" -- \
+                sh -c 'grep -q "\"migrate-js:run:all\"" package.json'; then
+              echo "Migrating..."
+              kubectl -n viwell-preprod exec "deploy/$DEPLOY_NAME" -- yarn migrate-js:run:all
+            else
+              echo "::notice::$DEPLOY_NAME has no migrate-js:run:all script; skipping migrations"
+            fi
+          elif [ "$ENVIRONMENT" = "prod" ]; then
+            kubectl rollout restart deployment "$DEPLOY_NAME" --namespace=prod-viwell
             echo "Deployment restarted in Prod env"
           else
-            echo "::error::Unknown environment '${{ inputs.ENVIRONMENT }}'"
+            echo "::error::Unknown environment '$ENVIRONMENT'"
             exit 1
           fi
 
