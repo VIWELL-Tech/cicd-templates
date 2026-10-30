@@ -188,7 +188,7 @@ jobs:
             echo "::error::Unknown environment '${{ inputs.ENVIRONMENT }}'"
             exit 1
           fi 
-          if kubectl -n "$K8S_NAMESPACE" exec "deploy/$DEPLOY_NAME" -- sh -c 'grep -q "\"migrate-js:run:all\"" package.json'; then
+          if kubectl -n "$K8S_NAMESPACE" exec -i deploy/"${{ inputs.DEPLOY_NAME }}" -- grep -q migrate-js:run:all package.json; then
             kubectl -n "$K8S_NAMESPACE" rollout status deployment "${{ inputs.DEPLOY_NAME }}" --timeout=10m
             echo "Migrating..."
             kubectl -n "$K8S_NAMESPACE" exec -i deploy/"${{ inputs.DEPLOY_NAME }}" -- yarn migrate-js:run:all
