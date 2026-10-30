@@ -176,3 +176,37 @@ jobs:
                 text:
                   type: "mrkdwn"
                   text: "GitHub Action deployment result in ${{ inputs.ENVIRONMENT }} for ${{ inputs.DEPLOY_NAME }}: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+
+  migrate_db:
+    needs: deploy
+    concurrency:
+      group: migrate-db-${{ inputs.ENVIRONMENT }}-${{ inputs.DEPLOY_NAME }}
+      cancel-in-progress: false
+    runs-on:
+      - self-hosted
+      - ${{ inputs.RUNS_ON }}
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+      - name: Configure EKS
+        run: |
+          if [ "${{ inputs.ENVIRONMENT }}" = "staging" ]; then
+            K8S_NAMESPACE="viwell-preprod"
+          elif [ "${{ inputs.ENVIRONMENT }}" = "prod" ]; then
+            K8S_NAMESPACE="prod-viwell"
+          else
+            echo "::error::Unknown environment '${{ inputs.ENVIRONMENT }}'"
+            exit 1
+          fi 
+          if kubectl -n "$K8S_NAMESPACE" exec "deploy/$DEPLOY_NAME" -- sh -c 'grep -q "\"migrate-js:run:all\"" package.json'; then
+            kubectl -n "$K8S_NAMESPACE" rollout status deployment "${{ inputs.DEPLOY_NAME }}" --timeout=10m
+            echo "Migrating..."
+            kubectl -n "$K8S_NAMESPACE" exec -i deploy/"${{ inputs.DEPLOY_NAME }}" -- yarn migrate-js:run:all
+            echo "============================="
+            echo "✅ No migration errors."
+            echo "============================="
+          else
+              echo "::notice::$DEPLOY_NAME has no migrate-js:run:all script; skipping migrations"
+          fi
