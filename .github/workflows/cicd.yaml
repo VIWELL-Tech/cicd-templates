@@ -18,6 +18,9 @@ on:
       NPMRC_PKG:
         description: "Additional tag to select a runner for the job execution"
         required: true
+      QA_DISPATCH_TOKEN:
+        description: "Optional: token allowed to send a repository_dispatch to VIWELL-Tech/qa-api-automation (repo scope, or fine-grained Contents: write on that repo). When not passed, NPMRC_PKG is used."
+        required: false
     inputs:
       ENVIRONMENT:
         description: "Which env this workflow will be building and deploying to"
@@ -197,4 +200,54 @@ jobs:
             echo "============================="
           else
               echo "::notice::$DEPLOY_NAME has no migrate-js:run:all script; skipping migrations"
+          fi
+
+  # After a successful STAGING deploy, start the QA core regression run (about 2,300 API tests,
+  # ~20 min) in VIWELL-Tech/qa-api-automation: .github/workflows/core-regression.yml listens for
+  # repository_dispatch "backend-deployed" and reports to Slack only when something is wrong.
+  # Never fails a deploy: every step is best-effort.
+  notify_qa:
+    name: Start the QA core regression run
+    needs: [deploy, migrate_db]
+    if: ${{ inputs.ENVIRONMENT == 'staging' }}
+    continue-on-error: true
+    runs-on:
+      - self-hosted
+      - ${{ inputs.RUNS_ON }}
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      # The deploy job only restarts the deployment; test the new pods, not the old ones.
+      - name: Wait for the new pods to be ready
+        env:
+          DEPLOY_NAME: ${{ inputs.DEPLOY_NAME }}
+        run: kubectl -n viwell-preprod rollout status deployment "$DEPLOY_NAME" --timeout=10m || echo "::warning::rollout status did not confirm in 10 min; notifying QA anyway"
+
+      - name: Send backend-deployed to qa-api-automation
+        env:
+          TOKEN: ${{ secrets.QA_DISPATCH_TOKEN || secrets.NPMRC_PKG }}
+          SERVICE: ${{ inputs.DEPLOY_NAME }}
+          SOURCE_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::no token available: the QA core regression run was not started"
+            exit 0
+          fi
+          payload=$(printf '{"event_type":"backend-deployed","client_payload":{"service":"%s","repository":"%s","sha":"%s","run_url":"%s"}}' \
+            "$SERVICE" "$SOURCE_REPO" "$SOURCE_SHA" "$RUN_URL")
+          code=$(curl -s -o /tmp/qa-dispatch.out -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/VIWELL-Tech/qa-api-automation/dispatches \
+            -d "$payload")
+          if [ "$code" = "204" ]; then
+            echo "QA core regression run requested for $SERVICE: https://github.com/VIWELL-Tech/qa-api-automation/actions/workflows/core-regression.yml"
+          else
+            echo "::warning::qa-api-automation dispatch answered HTTP $code: $(head -c 300 /tmp/qa-dispatch.out)"
           fi
